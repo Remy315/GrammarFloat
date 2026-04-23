@@ -24,7 +24,7 @@ jobs:
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: 'temuri'
           java-version: '17'
 
       - name: Setup Android SDK
@@ -32,7 +32,9 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./client
-        run: npm install
+        run: |
+          npm install
+          npm install @react-native-community/cli --save-dev
 
       - name: Generate Android native project
         working-directory: ./client
