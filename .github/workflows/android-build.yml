@@ -47,10 +47,6 @@ jobs:
           cd client/android
           chmod +x gradlew
           ./gradlew assembleRelease
-        env:
-          ANDROID_HOME: /opt/android-sdk
-          ANDROID_SDK_ROOT: /opt/android-sdk
-          JAVA_HOME: /usr/lib/jvm/temurin-17-jdk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
