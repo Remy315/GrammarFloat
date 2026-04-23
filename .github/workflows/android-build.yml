@@ -20,8 +20,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'client/package-lock.json'
 
       - name: Setup Java JDK
         uses: actions/setup-java@v4
@@ -35,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd client
-          npm ci
+          npm install
 
       - name: Generate Android native project
         run: |
@@ -59,39 +57,3 @@ jobs:
         with:
           name: GrammarFloat-APK
           path: client/android/app/build/outputs/apk/release/app-release.apk
-
-  build-ios:
-    name: Build iOS (for reference)
-    runs-on: macos-latest
-    if: false # Disabled by default, requires Apple Developer account
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Setup iOS
-        run: |
-          cd client
-          npm ci
-          npx expo prebuild --platform ios --clean
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Build iOS
-        run: |
-          cd client/ios
-          xcodebuild -workspace GrammarFloat.xcworkspace -scheme GrammarFloat -configuration Release -archivePath build/GrammarFloat.xcarchive archive
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: GrammarFloat-IPA
-          path: client/ios/build/GrammarFloat.xcarchive
