@@ -34,7 +34,7 @@ jobs:
         working-directory: ./client
         run: |
           npm install
-          npm install @react-native-community/cli --save-dev
+          npm install @react-native-community/cli @react-native/metro-config --save-dev
 
       - name: Generate Android native project
         working-directory: ./client
