@@ -31,25 +31,18 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install dependencies
-        run: |
-          cd client
-          npm install
+        working-directory: ./client
+        run: npm install
 
       - name: Generate Android native project
-        run: |
-          cd client
-          npx expo prebuild --platform android --clean
+        working-directory: ./client
+        run: npx expo prebuild --platform android --clean
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Export JS bundle
-        run: |
-          cd client
-          npx expo export --platform android
-
       - name: Build Debug APK
+        working-directory: ./client/android
         run: |
-          cd client/android
           chmod +x gradlew
           ./gradlew assembleDebug
 
