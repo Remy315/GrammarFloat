@@ -88,6 +88,8 @@ export default [
       'react/jsx-uses-react': 'off',
       'react/display-name': 'off',
       'react/prop-types': 'off',
+      // 允许在 render 中访问 Animated refs（用于动画）
+      'react-hooks/refs': 'off',
       'fontawesome6/valid-name': 'error',
       'reanimated/ban-mix-use': 'error',
       'forbidEmoji/no-emoji': 'error',
