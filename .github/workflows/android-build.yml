@@ -8,7 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -17,41 +16,33 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'client/package-lock.json'
 
-      - name: Setup Java JDK
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup EAS Build
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
       - name: Install dependencies
-        run: npm install
-        working-directory: ./client
-
-      - name: Install EAS CLI
-        run: npm install eas
-        working-directory: ./client
-
-      - name: Setup Expo project
-        run: npx expo install --check
-        working-directory: ./client
-
-      - name: Generate native Android project
-        run: npx expo prebuild --platform android --clean
-        working-directory: ./client
-
-      - name: Build Debug APK with EAS
-        env:
-          EAS_BUILD_CONTEXT: '{"platform":"android","profile":"debug"}'
         run: |
-          echo '{ "cli": { "version": ">= 5.0.0" }, "build": { "developmentClient": false, "distribution": "internal", "android": { "buildType": "apk" } }, "prebuild": { "withoutCredentials": true } }' > eas.json
-          npx eas build --local --platform android --profile debug --non-interactive
-        working-directory: ./client
+          cd client
+          npm install
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Generate Android native project
+        run: |
+          cd client
+          npx expo prebuild --platform android --clean
+
+      - name: Build Debug APK
+        run: |
+          cd client/android
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GrammarFloat-Debug-APK
+          path: client/android/app/build/outputs/apk/debug/*.apk
