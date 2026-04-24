@@ -51,17 +51,24 @@ jobs:
           echo "android.signingConfigs.release.keyPassword=android" >> client/android/gradle.properties
           echo "android.signingConfigs.release.keyAlias=androiddebugkey" >> client/android/gradle.properties
           echo "android.signingConfigs.release.storeFile=\$HOME/.android/debug.keystore" >> client/android/gradle.properties
+          echo "android.signingConfigs.release.enabled=true" >> client/android/gradle.properties
+          echo "android.buildTypes.release.signingConfig=release" >> client/android/gradle.properties
 
-      - name: Build Release APK
+      - name: Build Release APK with Gradle
         run: |
-          cd client
-          npx expo run:android --variant release --no-install
+          cd client/android
+          chmod +x gradlew
+          ./gradlew assembleRelease
 
       - name: Find and rename APK
         run: |
           APK=$(find client/android -name "*.apk" -type f | head -1)
           if [ -n "$APK" ]; then
             cp "$APK" ./GrammarFloat-Release.apk
+            echo "Found APK: $APK"
+          else
+            echo "No APK found!"
+            find client/android -name "*.apk" -type f
           fi
 
       - name: Upload APK
