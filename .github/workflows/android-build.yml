@@ -3,13 +3,10 @@ name: Build Android APK
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
-  build-android:
-    name: Build Android APK
+  build:
     runs-on: ubuntu-latest
     
     steps:
@@ -20,6 +17,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'client/package-lock.json'
 
       - name: Setup Java JDK
         uses: actions/setup-java@v4
@@ -27,40 +26,32 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup EAS Build
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
+        run: npm install
         working-directory: ./client
-        run: |
-          npm install
-          npm install @react-native-community/cli @react-native/metro-config --save-dev
 
-      - name: Generate Android native project
+      - name: Install EAS CLI
+        run: npm install eas
         working-directory: ./client
+
+      - name: Setup Expo project
+        run: npx expo install --check
+        working-directory: ./client
+
+      - name: Generate native Android project
         run: npx expo prebuild --platform android --clean
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Bundle JS for standalone APK
         working-directory: ./client
-        run: |
-          mkdir -p android/app/src/main/assets
-          npx react-native bundle \
-            --platform android \
-            --dev false \
-            --entry-file index.js \
-            --bundle-output android/app/src/main/assets/index.android.bundle \
-            --assets-dest android/app/src/main/res
 
-      - name: Build Debug APK
-        working-directory: ./client/android
+      - name: Build Debug APK with EAS
+        env:
+          EAS_BUILD_CONTEXT: '{"platform":"android","profile":"debug"}'
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: GrammarFloat-Debug-APK
-          path: client/android/app/build/outputs/apk/debug/app-debug.apk
+          echo '{ "cli": { "version": ">= 5.0.0" }, "build": { "developmentClient": false, "distribution": "internal", "android": { "buildType": "apk" } }, "prebuild": { "withoutCredentials": true } }' > eas.json
+          npx eas build --local --platform android --profile debug --non-interactive
+        working-directory: ./client
