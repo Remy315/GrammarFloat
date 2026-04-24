@@ -48,30 +48,28 @@ jobs:
         run: |
           cat >> client/android/gradle.properties << 'EOF'
           
-          android.signingConfigs.release.storePassword=android
-          android.signingConfigs.release.keyPassword=android
-          android.signingConfigs.release.keyAlias=androiddebugkey
-          android.signingConfigs.release.storeFile=$HOME/.android/debug.keystore
-          EOF
-
-      - name: Bundle JS with react-native
-        run: |
-          cd client
-          mkdir -p android/app/src/main/assets
-          npx react-native bundle \
-            --platform android \
-            --dev false \
-            --entry-file index.js \
-            --bundle-output android/app/src/main/assets/index.android.bundle \
-            --assets-dest android/app/src/main/res
+android.signingConfigs.release.storePassword=android
+android.signingConfigs.release.keyPassword=android
+android.signingConfigs.release.keyAlias=androiddebugkey
+android.signingConfigs.release.storeFile=$HOME/.android/debug.keystore
+EOF
 
       - name: Build Release APK
         run: |
-          cd client/android
-          ./gradlew assembleRelease
+          cd client
+          npx expo run:android --variant release --no-install
+
+      - name: Find and rename APK
+        run: |
+          APK=$(find client/android -name "*.apk" -type f | head -1)
+          if [ -n "$APK" ]; then
+            cp "$APK" ./GrammarFloat-Release.apk
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: GrammarFloat-Release-APK
-          path: client/android/app/build/outputs/apk/release/*.apk
+          path: |
+            client/android/app/build/outputs/apk/release/*.apk
+            GrammarFloat-Release.apk
