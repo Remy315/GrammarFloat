@@ -46,13 +46,11 @@ jobs:
 
       - name: Configure release signing
         run: |
-          cat >> client/android/gradle.properties << 'EOF'
-          
-android.signingConfigs.release.storePassword=android
-android.signingConfigs.release.keyPassword=android
-android.signingConfigs.release.keyAlias=androiddebugkey
-android.signingConfigs.release.storeFile=$HOME/.android/debug.keystore
-EOF
+          mkdir -p client/android
+          echo "android.signingConfigs.release.storePassword=android" >> client/android/gradle.properties
+          echo "android.signingConfigs.release.keyPassword=android" >> client/android/gradle.properties
+          echo "android.signingConfigs.release.keyAlias=androiddebugkey" >> client/android/gradle.properties
+          echo "android.signingConfigs.release.storeFile=\$HOME/.android/debug.keystore" >> client/android/gradle.properties
 
       - name: Build Release APK
         run: |
