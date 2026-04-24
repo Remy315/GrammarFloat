@@ -55,16 +55,15 @@ jobs:
           android.signingConfigs.release.storeFile=$HOME/.android/debug.keystore
           EOF
 
-      - name: Bundle JS for Android
+      - name: Bundle JS with Expo export
+        run: |
+          cd client
+          npx expo export --platform android
+
+      - name: Copy bundle to Android assets
         run: |
           mkdir -p client/android/app/src/main/assets
-          cd client
-          npx react-native bundle \
-            --platform android \
-            --dev false \
-            --entry-file index.js \
-            --bundle-output android/app/src/main/assets/index.android.bundle \
-            --assets-dest android/app/src/main/res
+          cp -r client/dist/* client/android/app/src/main/assets/
 
       - name: Build Release APK
         run: |
