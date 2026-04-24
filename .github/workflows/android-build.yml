@@ -36,17 +36,26 @@ jobs:
           cd client
           npx expo prebuild --platform android --clean
 
-      - name: Export Expo project to bundle
+      - name: Configure release signing
         run: |
-          cd client
-          npx expo export --platform android --output-dir ../dist
+          # Create gradle.properties with debug signing for release
+          cat >> client/android/gradle.properties << 'EOF'
+          
+          # Use debug signing for release builds (allows direct APK installation)
+          android.signingConfigs.release.storePassword=android
+          android.signingConfigs.release.keyPassword=android
+          android.signingConfigs.release.keyAlias=androiddebugkey
+          android.signingConfigs.release.storeFile=/root/.android/debug.keystore
+          EOF
 
-      - name: Copy bundle to Android assets
-        run: |
-          mkdir -p client/android/app/src/main/assets
-          cp dist/_expo/static/js/android/*.js client/android/app/src/main/assets/index.android.bundle 2>/dev/null || \
-          cp dist/_expo/*.js client/android/app/src/main/assets/index.android.bundle 2>/dev/null || \
-          echo "Using alternative bundle method"
+          # Create debug keystore if not exists
+          mkdir -p /root/.android
+          if [ ! -f /root/.android/debug.keystore ]; then
+            keytool -genkeypair -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+              -keystore /root/.android/debug.keystore \
+              -storepass android -keypass android \
+              -dname "CN=Debug, OU=Debug, O=Debug, L=Debug, ST=Debug, C=US"
+          fi
 
       - name: Bundle JS for Android
         run: |
@@ -59,13 +68,13 @@ jobs:
             --bundle-output android/app/src/main/assets/index.android.bundle \
             --assets-dest android/app/src/main/res
 
-      - name: Build Debug APK
+      - name: Build Release APK
         run: |
           cd client/android
-          ./gradlew assembleDebug
+          ./gradlew assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: GrammarFloat-APK
-          path: client/android/app/build/outputs/apk/debug/*.apk
+          name: GrammarFloat-Release-APK
+          path: client/android/app/build/outputs/apk/release/*.apk
