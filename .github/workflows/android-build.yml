@@ -23,70 +23,29 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install client dependencies
+      - name: Setup Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH" >> $GITHUB_ENV
+
+      - name: Install dependencies
         run: |
           cd client
           npm install
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Generate Android native project
+      - name: Generate Android project
         run: |
           cd client
           npx expo prebuild --platform android --clean
 
-      - name: Create debug keystore
-        run: |
-          mkdir -p ~/.android
-          keytool -genkeypair -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
-            -keystore ~/.android/debug.keystore \
-            -storepass android -keypass android \
-            -dname "CN=Debug, OU=Debug, O=Debug, L=Debug, ST=Debug, C=US"
-
-      - name: Configure release signing
-        run: |
-          mkdir -p client/android
-          echo "android.signingConfigs.release.storePassword=android" >> client/android/gradle.properties
-          echo "android.signingConfigs.release.keyPassword=android" >> client/android/gradle.properties
-          echo "android.signingConfigs.release.keyAlias=androiddebugkey" >> client/android/gradle.properties
-          echo "android.signingConfigs.release.storeFile=\$HOME/.android/debug.keystore" >> client/android/gradle.properties
-          echo "android.signingConfigs.release.enabled=true" >> client/android/gradle.properties
-          echo "android.buildTypes.release.signingConfig=release" >> client/android/gradle.properties
-
-      - name: Bundle JS manually
-        run: |
-          cd client
-          mkdir -p android/app/src/main/assets
-          npx react-native bundle \
-            --platform android \
-            --dev false \
-            --entry-file index.js \
-            --bundle-output android/app/src/main/assets/index.android.bundle \
-            --assets-dest android/app/src/main/res \
-            --reset-cache
-
-      - name: Build Release APK with Gradle
+      - name: Build Debug APK
         run: |
           cd client/android
           chmod +x gradlew
-          ./gradlew assembleRelease
-
-      - name: Find and rename APK
-        run: |
-          APK=$(find client/android -name "*.apk" -type f | head -1)
-          if [ -n "$APK" ]; then
-            cp "$APK" ./GrammarFloat-Release.apk
-            echo "Found APK: $APK"
-          else
-            echo "No APK found!"
-            find client/android -name "*.apk" -type f
-          fi
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: GrammarFloat-Release-APK
-          path: |
-            client/android/app/build/outputs/apk/release/*.apk
-            GrammarFloat-Release.apk
+          name: GrammarFloat-Debug-APK
+          path: client/android/app/build/outputs/apk/debug/*.apk
