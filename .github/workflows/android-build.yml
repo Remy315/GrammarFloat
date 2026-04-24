@@ -23,7 +23,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install dependencies
+      - name: Install client dependencies
         run: |
           cd client
           npm install
@@ -48,22 +48,22 @@ jobs:
         run: |
           cat >> client/android/gradle.properties << 'EOF'
           
-          # Use debug signing for release builds
           android.signingConfigs.release.storePassword=android
           android.signingConfigs.release.keyPassword=android
           android.signingConfigs.release.keyAlias=androiddebugkey
           android.signingConfigs.release.storeFile=$HOME/.android/debug.keystore
           EOF
 
-      - name: Bundle JS with Expo export
+      - name: Bundle JS with react-native
         run: |
           cd client
-          npx expo export --platform android
-
-      - name: Copy bundle to Android assets
-        run: |
-          mkdir -p client/android/app/src/main/assets
-          cp -r client/dist/* client/android/app/src/main/assets/
+          mkdir -p android/app/src/main/assets
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res
 
       - name: Build Release APK
         run: |
