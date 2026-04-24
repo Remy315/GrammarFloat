@@ -54,6 +54,18 @@ jobs:
           echo "android.signingConfigs.release.enabled=true" >> client/android/gradle.properties
           echo "android.buildTypes.release.signingConfig=release" >> client/android/gradle.properties
 
+      - name: Bundle JS manually
+        run: |
+          cd client
+          mkdir -p android/app/src/main/assets
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res \
+            --reset-cache
+
       - name: Build Release APK with Gradle
         run: |
           cd client/android
