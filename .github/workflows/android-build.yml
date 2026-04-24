@@ -36,26 +36,24 @@ jobs:
           cd client
           npx expo prebuild --platform android --clean
 
+      - name: Create debug keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -genkeypair -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+            -keystore ~/.android/debug.keystore \
+            -storepass android -keypass android \
+            -dname "CN=Debug, OU=Debug, O=Debug, L=Debug, ST=Debug, C=US"
+
       - name: Configure release signing
         run: |
-          # Create gradle.properties with debug signing for release
           cat >> client/android/gradle.properties << 'EOF'
           
-          # Use debug signing for release builds (allows direct APK installation)
+          # Use debug signing for release builds
           android.signingConfigs.release.storePassword=android
           android.signingConfigs.release.keyPassword=android
           android.signingConfigs.release.keyAlias=androiddebugkey
-          android.signingConfigs.release.storeFile=/root/.android/debug.keystore
+          android.signingConfigs.release.storeFile=$HOME/.android/debug.keystore
           EOF
-
-          # Create debug keystore if not exists
-          mkdir -p /root/.android
-          if [ ! -f /root/.android/debug.keystore ]; then
-            keytool -genkeypair -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
-              -keystore /root/.android/debug.keystore \
-              -storepass android -keypass android \
-              -dname "CN=Debug, OU=Debug, O=Debug, L=Debug, ST=Debug, C=US"
-          fi
 
       - name: Bundle JS for Android
         run: |
