@@ -36,6 +36,29 @@ jobs:
           cd client
           npx expo prebuild --platform android --clean
 
+      - name: Export Expo project to bundle
+        run: |
+          cd client
+          npx expo export --platform android --output-dir ../dist
+
+      - name: Copy bundle to Android assets
+        run: |
+          mkdir -p client/android/app/src/main/assets
+          cp dist/_expo/static/js/android/*.js client/android/app/src/main/assets/index.android.bundle 2>/dev/null || \
+          cp dist/_expo/*.js client/android/app/src/main/assets/index.android.bundle 2>/dev/null || \
+          echo "Using alternative bundle method"
+
+      - name: Bundle JS for Android
+        run: |
+          mkdir -p client/android/app/src/main/assets
+          cd client
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res
+
       - name: Build Debug APK
         run: |
           cd client/android
@@ -44,5 +67,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: GrammarFloat-Debug-APK
+          name: GrammarFloat-APK
           path: client/android/app/build/outputs/apk/debug/*.apk
